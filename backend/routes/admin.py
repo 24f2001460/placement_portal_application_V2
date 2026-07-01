@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required,get_jwt_identity, get_current_user
 from database import db
 from models.models import *
 from functools import wraps
+from extensions import cache
 
 admin_bp = Blueprint('admin',__name__)
 
@@ -44,6 +45,7 @@ def dashboard():
 
 @admin_bp.route('/companies', methods=['GET'])
 @admin_required
+@cache.cached(timeout=60, key_prefix='admin_companies')
 def get_companies():
 
     companies = CompanyProfile.query.all()
@@ -69,6 +71,7 @@ def get_companies():
 @admin_bp.route('/companies/<int:company_id>/approve', methods=['PUT'])
 @admin_required
 def approve_company(company_id):
+    cache.delete('admin_companies')
 
     data = request.get_json()
     action = data.get('action')
@@ -102,6 +105,7 @@ def approve_company(company_id):
 
 @admin_bp.route('/students', methods=['GET'])
 @admin_required
+@cache.cached(timeout=60, key_prefix='admin_students')
 def get_students():
     students = StudentProfile.query.all()
     result = []
@@ -132,6 +136,7 @@ def blacklist_student(student_id):
 
 @admin_bp.route('/drives', methods=['GET'])
 @admin_required
+@cache.cached(timeout=60, key_prefix='admin_drives')
 def get_drives():
     drives = PlacementDrive.query.all()
     result = []
@@ -150,6 +155,7 @@ def get_drives():
 @admin_bp.route('/drives/<int:drive_id>/approve', methods=['PUT'])
 @admin_required
 def approve_drive(drive_id):
+    cache.delete('admin_drives')
     data = request.get_json()
     action = data.get('action')
     drive = PlacementDrive.query.get_or_404(drive_id)
