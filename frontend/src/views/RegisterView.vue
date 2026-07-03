@@ -1,363 +1,147 @@
 <template>
-  <div class="container-fluid bg-light min-vh-100 d-flex justify-content-center align-items-center py-4">
-
-    <div class="card shadow border-0" style="max-width:520px;width:100%;">
-
-      <div class="card-body p-4">
-
-        <!-- Logo -->
-        <div class="text-center mb-4">
-
-          <div
-            class="rounded-circle bg-primary text-white d-inline-flex justify-content-center align-items-center fs-2"
-            style="width:70px;height:70px;">
-
-            📝
-
-          </div>
-
-          <h3 class="fw-bold mt-3 mb-1">
-            Create Account
-          </h3>
-
-          <p class="text-muted mb-0">
-            Join Placement Portal
-          </p>
-
-        </div>
-
-        <!-- Alerts -->
-
-        <div
-          v-if="error"
-          class="alert alert-danger">
-
-          {{ error }}
-
-        </div>
-
-        <div
-          v-if="success"
-          class="alert alert-success">
-
-          {{ success }}
-
-        </div>
-
-        <!-- Register As -->
-
-        <div class="mb-3">
-
-          <label class="form-label">
-            Register As
-          </label>
-
-          <select
-            v-model="role"
-            class="form-select">
-
-            <option value="student">
-              Student
-            </option>
-
-            <option value="company">
-              Company
-            </option>
-
-          </select>
-
-        </div>
-
-        <!-- Email -->
-
-        <div class="mb-3">
-
-          <label class="form-label">
-            Email
-          </label>
-
-          <input
-            v-model="form.email"
-            type="email"
-            class="form-control"
-            placeholder="Enter email"
-            required>
-
-        </div>
-
-        <!-- Password -->
-
-        <div class="mb-4">
-
-          <label class="form-label">
-            Password
-          </label>
-
-          <input
-            v-model="form.password"
-            type="password"
-            class="form-control"
-            placeholder="Create password"
-            required>
-
-        </div>
-
-        <!-- Student Form -->
-
-        <template v-if="role==='student'">
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Full Name
-            </label>
-
-            <input
-              v-model="form.full_name"
-              class="form-control"
-              placeholder="Enter full name">
-
-          </div>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Roll Number
-            </label>
-
-            <input
-              v-model="form.roll_number"
-              class="form-control"
-              placeholder="Enter roll number">
-
-          </div>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Branch
-            </label>
-
-            <select
-              v-model="form.branch"
-              class="form-select">
-
-              <option>CSE</option>
-              <option>ECE</option>
-              <option>ME</option>
-              <option>CE</option>
-              <option>EE</option>
-
-            </select>
-
-          </div>
-
-          <div class="row">
-
-            <div class="col-md-6 mb-3">
-
-              <label class="form-label">
-                Year
-              </label>
-
-              <input
-                v-model="form.year"
-                type="number"
-                class="form-control">
-
-            </div>
-
-            <div class="col-md-6 mb-3">
-
-              <label class="form-label">
-                CGPA
-              </label>
-
-              <input
-                v-model="form.cgpa"
-                type="number"
-                step="0.1"
-                class="form-control">
-
-            </div>
-
-          </div>
-
-        </template>
-
-        <!-- Company Form -->
-
-        <template v-else>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              Company Name
-            </label>
-
-            <input
-              v-model="form.company_name"
-              class="form-control"
-              placeholder="Enter company name">
-
-          </div>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              HR Contact Name
-            </label>
-
-            <input
-              v-model="form.hr_contact_name"
-              class="form-control"
-              placeholder="Enter HR contact name">
-
-          </div>
-
-          <div class="mb-3">
-
-            <label class="form-label">
-              HR Phone
-            </label>
-
-            <input
-              v-model="form.hr_phone"
-              class="form-control"
-              placeholder="Enter phone number">
-
-          </div>
-
-          <div class="mb-4">
-
-            <label class="form-label">
-              Website
-            </label>
-
-            <input
-              v-model="form.website"
-              class="form-control"
-              placeholder="https://company.com">
-
-          </div>
-
-        </template>
-
-        <!-- Register Button -->
-
-        <button
-          class="btn btn-primary w-100"
-          :disabled="loading"
-          @click="handleRegister">
-
-          <span
-            v-if="loading"
-            class="spinner-border spinner-border-sm me-2">
-          </span>
-
-          {{ loading ? "Creating Account..." : "Create Account" }}
-
-        </button>
-
-        <hr class="my-4">
-
-        <p class="text-center mb-0 text-muted">
-
-          Already have an account?
-
-          <router-link
-            to="/login"
-            class="text-decoration-none fw-semibold">
-
-            Login
-
-          </router-link>
-
-        </p>
-
+  <div style="padding-top: 50px; padding-bottom: 50px;">
+    <div class="wf-card" style="max-width: 550px;">
+      <h2 style="text-align: center; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px;">Register Form</h2>
+
+      <div v-if="error" style="border: 1px solid red; color: red; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+        {{ error }}
       </div>
 
-    </div>
+      <div v-if="success" style="border: 1px solid green; color: green; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
+        {{ success }}
+      </div>
 
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Register As</label>
+        <select v-model="role" class="wf-select">
+          <option value="student">Student</option>
+          <option value="company">Company</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Username (Email)</label>
+        <input v-model="form.email" type="email" class="wf-input" placeholder="Enter Username (Email)" required />
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Password</label>
+        <input v-model="form.password" type="password" class="wf-input" placeholder="Enter Password" required />
+      </div>
+
+      <!-- Student Fields -->
+      <div v-if="role === 'student'">
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Full Name</label>
+          <input v-model="form.full_name" type="text" class="wf-input" placeholder="Mr. Abcde" required />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Roll Number</label>
+          <input v-model="form.roll_number" type="text" class="wf-input" placeholder="24f200..." required />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Branch</label>
+          <select v-model="form.branch" class="wf-select">
+            <option value="CSE">Computer Science and Engineering</option>
+            <option value="ECE">Electronics and Communication Engineering</option>
+            <option value="ME">Mechanical Engineering</option>
+            <option value="CE">Civil Engineering</option>
+            <option value="EE">Electrical Engineering</option>
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+          <div style="flex: 1;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Year</label>
+            <input v-model="form.year" type="number" min="1" max="4" class="wf-input" required />
+          </div>
+          <div style="flex: 1;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">CGPA</label>
+            <input v-model="form.cgpa" type="number" step="0.01" min="0" max="10" class="wf-input" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- Company Fields -->
+      <div v-if="role === 'company'">
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Company Name</label>
+          <input v-model="form.company_name" type="text" class="wf-input" placeholder="e.g. Google" required />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">HR Contact Name</label>
+          <input v-model="form.hr_contact_name" type="text" class="wf-input" placeholder="HR Name" required />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">HR Phone</label>
+          <input v-model="form.hr_phone" type="text" class="wf-input" placeholder="Phone Number" required />
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Industry</label>
+          <input v-model="form.industry" type="text" class="wf-input" placeholder="e.g. IT, Sales" required />
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px;">
+        <button @click="handleRegister" class="wf-btn wf-btn-primary" style="padding: 8px 30px; border: 1px solid #000;" :disabled="loading">
+          {{ loading ? 'Registering...' : 'Register' }}
+        </button>
+      </div>
+
+      <div style="text-align: center; font-size: 14px; margin-top: 15px; border-top: 1px solid #ccc; padding-top: 15px;">
+        Already have an account? <router-link to="/login" style="color: #0d6efd; text-decoration: underline;">Login</router-link>
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-
-.card{
-    border-radius:12px;
-    max-height:90vh;
-    overflow-y:auto;
-}
-
-</style>
 
 <script>
 import axios from 'axios'
 
 export default {
-  name: 'StudentRegister',
-
+  name: 'RegisterView',
   data() {
     return {
       role: 'student',
       error: '',
       success: '',
       loading: false,
-
       form: {
         email: '',
         password: '',
-
         full_name: '',
         roll_number: '',
         branch: 'CSE',
         year: 1,
-        cgpa: 0,
-
+        cgpa: 8.0,
         company_name: '',
         hr_contact_name: '',
         hr_phone: '',
-        website: ''
+        industry: ''
       }
     }
   },
-
   methods: {
-
     async handleRegister() {
-
       this.loading = true
       this.error = ''
       this.success = ''
-
       try {
-
         const url = `http://localhost:5000/api/auth/register/${this.role}`
-
         const resp = await axios.post(url, this.form)
-
         this.success = resp.data.message
-
-        setTimeout(() => {
-          this.$router.push('/login')
-        }, 2000)
-
+        setTimeout(() => this.$router.push('/login'), 2000)
       } catch (e) {
-
-        this.error =
-          e.response?.data?.error ||
-          'Registration failed!'
-
+        this.error = e.response?.data?.error || 'Registration failed!'
       } finally {
-
         this.loading = false
-
       }
-
     }
-
   }
-
 }
 </script>

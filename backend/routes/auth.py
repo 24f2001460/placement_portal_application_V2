@@ -10,22 +10,21 @@ auth_bp = Blueprint('auth',__name__)
 # REGISTER STUDENT
 @auth_bp.route('/register/student',methods=['POST'])
 def register_student():
-    
+
     data = request.get_json() or {}
-    print(data)
     required_fields = ['email','password','full_name','roll_number','branch','year','cgpa']
 
     for i in required_fields:
         if not data.get(i):
             return jsonify({'error':f'{i} is required'}), 400
-        
+
     email = data['email'].strip().lower()
     if User.query.filter_by(email=email).first():
         return jsonify({'error':'Email already registered'}),409
     roll_number = data['roll_number'].strip().lower()
     if StudentProfile.query.filter_by(roll_number=roll_number).first():
         return jsonify({'error':'Student with this roll number already registered'}),409
-    
+
     try:
         user = User()
         user.email = email
@@ -46,13 +45,18 @@ def register_student():
         db.session.add(profile)
 
         db.session.commit()
-    
+        try:
+            from extensions import cache
+            cache.delete('admin_students')
+        except Exception:
+            pass
+
         return jsonify({'message':'Student regsitered successfully'}),201
-    
+
     except SQLAlchemyError:
         db.session.rollback()
         return jsonify({'error':'Database error occurred'}),500
-    
+
     except Exception:
         db.session.rollback()
         return jsonify({'error':'Registration Failed'}),500
@@ -67,7 +71,7 @@ def register_company():
     for i in required_fields:
         if not data.get(i):
             return jsonify({'error':f'{i} is required'}), 400
-  
+
     email = data['email'].strip().lower()
     if User.query.filter_by(email=email).first():
         return jsonify({'error':'Email already registered'}),409
@@ -96,12 +100,17 @@ def register_company():
         db.session.add(company)
 
         db.session.commit()
+        try:
+            from extensions import cache
+            cache.delete('admin_companies')
+        except Exception:
+            pass
         return jsonify({'message': 'Details has been send successfully. Wait for admin approval'}), 201
-    
+
     except SQLAlchemyError:
         db.session.rollback()
         return jsonify({'error':'Database error occurred'}),500
-    
+
     except Exception:
         db.session.rollback()
         return jsonify({'error':'Failed!, Try again'}),500
@@ -111,8 +120,6 @@ def register_company():
 def login():
     data = request.get_json() or {}
 
-    print(data)
-
     email = data.get('email')
     password = data.get('password')
 
@@ -120,25 +127,28 @@ def login():
         return jsonify({'error':'Email and Password are required'}), 400
 
     user = User.query.filter_by(email=email).first()
-    
-    if user.role=='company':                                     ## specific to company ( have to wait untill admin approval )
-        cp = user.company_profile
-        if cp.approval_status=='pending':
-            return jsonify({"error":"Company Approval is still pending"}), 403
-        if cp.approval_status=='rejected':
-             return jsonify({"error":"Company was not approved"}), 403
-        
+
     if not user or not user.check_passwd(password):
         return jsonify({'error': 'Wrong Credentials'}), 401
 
     if not user.is_active:
         return jsonify({'error': 'Credentials Deactivated'}), 403
 
-    # Last login 
+    if user.role == 'company':
+        cp = user.company_profile
+        if cp:
+            if cp.approval_status == 'pending':
+                return jsonify({"error":"Company Approval is still pending"}), 403
+            if cp.approval_status == 'rejected':
+                 return jsonify({"error":"Company was not approved"}), 403
+            if cp.approval_status == 'blacklisted':
+                 return jsonify({"error":"Company has been blacklisted"}), 403
+
+    # Last login
     user.last_login = datetime.now(timezone.utc)
     db.session.commit()
 
-    # JWT token 
+    # JWT token
     token = create_access_token(identity=user,additional_claims={'role':user.role})
 
     return jsonify({
@@ -150,5 +160,12 @@ def login():
             "role":user.role
         }
     }), 200
+
+
+@auth_bp.route('/gchat/mock_webhook', methods=['POST'])
+def mock_gchat_webhook():
+    data = request.get_json() or {}
+    print(f"\n[GCHAT WEBHOOK MOCK] Received notification:\n{data.get('text')}\n")
+    return jsonify({'status': 'success', 'message': 'Mock webhook received data successfully!'}), 200
 
 
