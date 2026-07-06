@@ -47,22 +47,24 @@ def dashboard():
 @admin_required
 @cache.cached(timeout=60, key_prefix='admin_companies')
 def get_companies():
-
     companies = CompanyProfile.query.all()
-
     result = []
-
     for c in companies:
         result.append({
             'id': c.id,
             'company_name': c.company_name,
             'email': c.user.email,
             'hr_contact': c.hr_contact_name,
+            'hr_phone': c.hr_phone,
             'website': c.website,
+            'industry': c.industry,
+            'description': c.description,
+            'headquarters': c.headquarters,
+            'founded_year': c.founded_year,
+            'employee_count': c.employee_count,
             'approval_status': c.approval_status,
             'created_at': str(c.created_at)
         })
-
     return jsonify(result), 200
 
 
@@ -118,6 +120,15 @@ def get_students():
             'branch': s.branch,
             'year': s.year,
             'cgpa': s.cgpa,
+            'phone': s.phone,
+            'date_of_birth': str(s.date_of_birth) if s.date_of_birth else None,
+            'graduation_year': s.graduation_year,
+            'backlogs': s.backlogs,
+            'resume_filename': s.resume_filename,
+            'skills': s.skills,
+            'linkedin_url': s.linkedin_url,
+            'github_url': s.github_url,
+            'bio': s.bio,
             'status': s.status,
             'is_placed': s.is_placed
         })
@@ -127,6 +138,11 @@ def get_students():
 @admin_bp.route('/students/<int:student_id>/blacklist', methods=['PUT'])
 @admin_required
 def blacklist_student(student_id):
+    cache.delete('admin_students')
+    try:
+        cache.delete('admin_applications')
+    except Exception:
+        pass
     student = StudentProfile.query.get_or_404(student_id)
     student.status = 'blacklisted'
     student.user.is_active = False
@@ -144,8 +160,19 @@ def get_drives():
         result.append({
             'id': d.id,
             'job_title': d.job_title,
+            'job_description': d.job_description,
+            'job_type': d.job_type,
             'company': d.company.company_name,
+            'location': d.location,
+            'salary_range': d.salary_range,
+            'openings': d.openings,
+            'eligible_branches': d.eligible_branches,
+            'min_cgpa': d.min_cgpa,
+            'eligible_years': d.eligible_years,
+            'max_backlogs': d.max_backlogs,
+            'required_skills': d.required_skills,
             'status': d.status,
+            'rejection_reason': d.rejection_reason,
             'deadline': str(d.application_deadline),
             'created_at': str(d.created_at)
         })
@@ -171,6 +198,20 @@ def approve_drive(drive_id):
     return jsonify({'error': 'Invalid action'}), 400
 
 
+@admin_bp.route('/drives/<int:drive_id>/complete', methods=['PUT'])
+@admin_required
+def complete_drive(drive_id):
+    cache.delete('admin_drives')
+    try:
+        cache.delete('admin_applications')
+    except Exception:
+        pass
+    drive = PlacementDrive.query.get_or_404(drive_id)
+    drive.status = 'completed'
+    db.session.commit()
+    return jsonify({'message': f'{drive.job_title} marked as completed!'}), 200
+
+
 @admin_bp.route('/search', methods=['GET'])
 @admin_required
 def search():
@@ -182,7 +223,90 @@ def search():
     companies = CompanyProfile.query.filter(
         CompanyProfile.company_name.ilike(f'%{query}%')
     ).all()
+    drives = PlacementDrive.query.filter(
+        PlacementDrive.job_title.ilike(f'%{query}%')
+    ).all()
     return jsonify({
-        'students': [{'id': s.id, 'name': s.full_name, 'roll': s.roll_number} for s in students],
-        'companies': [{'id': c.id, 'name': c.company_name} for c in companies]
+        'students': [{'id': s.id, 'full_name': s.full_name, 'roll_number': s.roll_number, 'branch': s.branch, 'cgpa': s.cgpa, 'status': s.status, 'is_placed': s.is_placed} for s in students],
+        'companies': [{'id': c.id, 'company_name': c.company_name, 'email': c.user.email, 'hr_contact': c.hr_contact_name, 'website': c.website, 'approval_status': c.approval_status} for c in companies],
+        'drives': [{'id': d.id, 'job_title': d.job_title, 'company': d.company.company_name, 'status': d.status, 'deadline': str(d.application_deadline)} for d in drives]
     }), 200
+
+
+@admin_bp.route('/applications', methods=['GET'])
+@admin_required
+@cache.cached(timeout=60, key_prefix='admin_applications')
+def get_applications():
+    applications = Application.query.all()
+    result = []
+    for app in applications:
+        result.append({
+            'id': app.id,
+            'student_id': app.student_id,
+            'student_name': app.student.full_name,
+            'student_email': app.student.user.email,
+            'student_cgpa': app.student.cgpa,
+            'student_phone': app.student.phone,
+            'student_backlogs': app.student.backlogs,
+            'student_skills': app.student.skills,
+            'branch': app.student.branch,
+            'roll_number': app.student.roll_number,
+            'drive_id': app.drive_id,
+            'job_title': app.drive.job_title,
+            'company_name': app.drive.company.company_name,
+            'cover_letter': app.cover_letter,
+            'remarks': app.company_remarks,
+            'status': app.status,
+            'applied_at': str(app.applied_at)
+        })
+    return jsonify(result), 200
+
+
+@admin_bp.route('/companies/<int:company_id>/blacklist', methods=['PUT'])
+@admin_required
+def blacklist_company(company_id):
+    cache.delete('admin_companies')
+    cache.delete('admin_drives')
+    try:
+        cache.delete('admin_applications')
+    except Exception:
+        pass
+    company = CompanyProfile.query.get_or_404(company_id)
+    company.approval_status = 'blacklisted'
+    company.user.is_active = False
+
+    # Cancel all its drives
+    for drive in company.drives:
+        drive.status = 'cancelled'
+
+    db.session.commit()
+    return jsonify({'message': f'{company.company_name} blacklisted and all its drives cancelled!'}), 200
+
+
+@admin_bp.route('/students/<int:student_id>/activate', methods=['PUT'])
+@admin_required
+def activate_student(student_id):
+    cache.delete('admin_students')
+    try:
+        cache.delete('admin_applications')
+    except Exception:
+        pass
+    student = StudentProfile.query.get_or_404(student_id)
+    student.status = 'approved'
+    student.user.is_active = True
+    db.session.commit()
+    return jsonify({'message': f'{student.full_name} reactivated!'}), 200
+
+
+@admin_bp.route('/drives/<int:drive_id>/cancel', methods=['PUT'])
+@admin_required
+def cancel_drive(drive_id):
+    cache.delete('admin_drives')
+    try:
+        cache.delete('admin_applications')
+    except Exception:
+        pass
+    drive = PlacementDrive.query.get_or_404(drive_id)
+    drive.status = 'cancelled'
+    db.session.commit()
+    return jsonify({'message': f'{drive.job_title} drive cancelled!'}), 200
