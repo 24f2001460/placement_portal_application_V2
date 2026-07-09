@@ -11,9 +11,11 @@ company_bp = Blueprint('company', __name__)
 def get_company_profile():
     email = get_jwt_identity()
     user = User.query.filter_by(email=email).first()
-    if not user or user.role != 'company':
+    if not user or user.role != 'company' or not user.is_active:
         return None
     company = CompanyProfile.query.filter_by(user_id=user.id).first()
+    if not company or company.approval_status == 'blacklisted':
+        return None
     return company
 
 # ─── DASHBOARD ──────────────────────────────────────
@@ -22,10 +24,10 @@ def get_company_profile():
 def dashboard():
     company = get_company_profile()
     if not company:
-        return jsonify({'error': 'Company only!'}), 403
+        return jsonify({'error': 'Company only or blocked!'}), 403
 
     if company.approval_status != 'approved':
-        return jsonify({'error': 'Admin approval ka wait karo!'}), 403
+        return jsonify({'error': 'Please wait for admin approval!'}), 403
 
     drives = PlacementDrive.query.filter_by(company_id=company.id).all()
 
@@ -56,15 +58,15 @@ def create_drive():
         return jsonify({'error': 'Company only!'}), 403
 
     if company.approval_status != 'approved':
-        return jsonify({'error': 'Admin approval ke baad drive create kar sakte ho!'}), 403
+        return jsonify({'error': 'You can only create placement drives after admin approval!'}), 403
 
     data = request.get_json()
 
     if not data.get('job_title') or not data.get('job_description'):
-        return jsonify({'error': 'Job title aur description required hai'}), 400
+        return jsonify({'error': 'Job title and description are required'}), 400
 
     if not data.get('application_deadline'):
-        return jsonify({'error': 'Deadline required hai'}), 400
+        return jsonify({'error': 'Deadline is required'}), 400
 
     drive = PlacementDrive()
     drive.company_id = company.id
@@ -79,16 +81,57 @@ def create_drive():
     drive.eligible_years = data.get('eligible_years', '')
     drive.max_backlogs = int(data.get('max_backlogs', 0))
     drive.required_skills = data.get('required_skills', '')
-    drive.application_deadline = datetime.fromisoformat(data.get('application_deadline'))
+    
+    # Handle deadline correctly
+    deadline_str = data.get('application_deadline')
+    try:
+        drive.application_deadline = datetime.fromisoformat(deadline_str.replace('Z', '+00:00'))
+    except Exception:
+        drive.application_deadline = datetime.strptime(deadline_str, "%Y-%m-%dT%H:%M")
+        
     drive.status = 'pending'
 
     db.session.add(drive)
     db.session.commit()
 
-    return jsonify({'message': 'Drive created! Admin approval ka wait karo.', 'drive_id': drive.id}), 201
+    try:
+        from extensions import cache
+        cache.delete('admin_drives')
+    except Exception:
+        pass
+
+    return jsonify({'message': 'Drive created! Please wait for admin approval.', 'drive_id': drive.id}), 201
 
 
-# ─── GET MY DRIVES ───────────────────────────────────
+# ─── COMPLETE DRIVE ──────────────────────────────────
+@company_bp.route('/drives/<int:drive_id>/complete', methods=['PUT'])
+@jwt_required()
+def complete_drive(drive_id):
+    company = get_company_profile()
+    if not company:
+        return jsonify({'error': 'Company only!'}), 403
+
+    drive = PlacementDrive.query.filter_by(
+        id=drive_id,
+        company_id=company.id
+    ).first()
+
+    if not drive:
+        return jsonify({'error': 'Drive not found!'}), 404
+
+    drive.status = 'completed'
+    db.session.commit()
+
+    try:
+        from extensions import cache
+        cache.delete('admin_drives')
+    except Exception:
+        pass
+
+    return jsonify({'message': f'Drive {drive.job_title} marked as completed!'}), 200
+
+
+# ─── COMPANY DRIVES ───────────────────────────────────
 @company_bp.route('/drives', methods=['GET'])
 @jwt_required()
 def get_drives():
@@ -103,11 +146,17 @@ def get_drives():
         result.append({
             'id': d.id,
             'job_title': d.job_title,
+            'job_description': d.job_description,
             'job_type': d.job_type,
             'location': d.location,
             'salary_range': d.salary_range,
             'status': d.status,
             'deadline': str(d.application_deadline),
+            'min_cgpa': d.min_cgpa,
+            'max_backlogs': d.max_backlogs,
+            'eligible_branches': d.eligible_branches,
+            'openings': d.openings,
+            'required_skills': d.required_skills,
             'total_applicants': len(d.applications)
         })
 
@@ -128,7 +177,7 @@ def get_applications(drive_id):
     ).first()
 
     if not drive:
-        return jsonify({'error': 'Drive nahi mila!'}), 404
+        return jsonify({'error': 'Drive not found!'}), 404
 
     applications = Application.query.filter_by(drive_id=drive_id).all()
 
@@ -136,10 +185,17 @@ def get_applications(drive_id):
     for app in applications:
         result.append({
             'application_id': app.id,
+            'student_id': app.student.id,
             'student_name': app.student.full_name,
             'roll_number': app.student.roll_number,
             'branch': app.student.branch,
             'cgpa': app.student.cgpa,
+            'phone': app.student.phone,
+            'backlogs': app.student.backlogs,
+            'skills': app.student.skills,
+            'linkedin_url': app.student.linkedin_url,
+            'github_url': app.student.github_url,
+            'bio': app.student.bio,
             'status': app.status,
             'applied_at': str(app.applied_at)
         })
@@ -157,7 +213,7 @@ def update_status(app_id):
 
     application = Application.query.get_or_404(app_id)
 
-    # Check karo ye drive is company ki hai
+    # Check if this drive belongs to this company
     if application.drive.company_id != company.id:
         return jsonify({'error': 'Unauthorized!'}), 403
 
@@ -166,7 +222,7 @@ def update_status(app_id):
 
     valid_statuses = ['shortlisted', 'selected', 'rejected']
     if new_status not in valid_statuses:
-        return jsonify({'error': f'Status hona chahiye: {valid_statuses}'}), 400
+        return jsonify({'error': f'Status must be one of: {valid_statuses}'}), 400
 
     application.status = new_status
 
@@ -182,5 +238,12 @@ def update_status(app_id):
 
     application.company_remarks = data.get('remarks', '')
     db.session.commit()
+
+    try:
+        from extensions import cache
+        cache.delete('admin_applications')
+        cache.delete('admin_students')
+    except Exception:
+        pass
 
     return jsonify({'message': f'Application {new_status}!'}), 200
