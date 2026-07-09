@@ -6,14 +6,25 @@ from models.models import *
 from security import jwt
 from extensions import cache, mail
 
-def create_app():
+def create_app(config_class=Config):
     app = Flask(__name__)
-    app.config.from_object(Config)
+    app.config.from_object(config_class)
     db.init_app(app)
     jwt.init_app(app)
     cache.init_app(app)
     mail.init_app(app)
     CORS(app)
+
+    from routes.auth import auth_bp
+    from routes.admin import admin_bp
+    from routes.company import company_bp
+    from routes.student import student_bp
+
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(company_bp, url_prefix='/api/company')
+    app.register_blueprint(student_bp, url_prefix='/api/student')
+
     app.app_context().push()
     return app
 
@@ -30,16 +41,6 @@ def create_admin():
         db.session.commit()
 
 app = create_app()
-
-from routes.auth import auth_bp
-from routes.admin import admin_bp
-from routes.company import company_bp
-from routes.student import student_bp
-
-app.register_blueprint(auth_bp, url_prefix='/api/auth')
-app.register_blueprint(admin_bp, url_prefix='/api/admin')
-app.register_blueprint(company_bp, url_prefix='/api/company')
-app.register_blueprint(student_bp, url_prefix='/api/student')
 
 def __seed():
     print("Seeding database with dummy data...")
