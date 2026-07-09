@@ -1,6 +1,6 @@
 <template>
   <div style="padding-top: 50px; padding-bottom: 50px;">
-    <div class="wf-card" style="max-width: 550px;">
+    <div class="wf-card" style="max-width: 800px;">
       <h2 style="text-align: center; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px;">Register Form</h2>
 
       <div v-if="error" style="border: 1px solid red; color: red; padding: 10px; margin-bottom: 15px; border-radius: 4px;">
@@ -11,53 +11,59 @@
         {{ success }}
       </div>
 
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Register As</label>
-        <select v-model="role" class="wf-select">
-          <option value="student">Student</option>
-          <option value="company">Company</option>
-        </select>
-      </div>
+      <!-- Account Settings Row -->
+      <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Register As</label>
+          <select v-model="role" class="wf-select">
+            <option value="student">Student</option>
+            <option value="company">Company</option>
+          </select>
+        </div>
 
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Username (Email)</label>
-        <input v-model="form.email" type="email" class="wf-input" placeholder="Enter Username (Email)" required />
-      </div>
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Username (Email)</label>
+          <input v-model="form.email" type="email" class="wf-input" placeholder="Enter Username (Email)" required />
+        </div>
 
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; font-weight: bold; margin-bottom: 5px;">Password</label>
-        <input v-model="form.password" type="password" class="wf-input" placeholder="Enter Password" required />
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Password</label>
+          <input v-model="form.password" type="password" class="wf-input" placeholder="Enter Password" required />
+        </div>
       </div>
 
       <!-- Student Fields -->
       <div v-if="role === 'student'">
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Full Name</label>
-          <input v-model="form.full_name" type="text" class="wf-input" placeholder="Mr. Abcde" required />
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Full Name</label>
+            <input v-model="form.full_name" type="text" class="wf-input" placeholder="Mr. Abcde" required />
+          </div>
+
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Roll Number</label>
+            <input v-model="form.roll_number" type="text" class="wf-input" placeholder="24f200..." required />
+          </div>
         </div>
 
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Roll Number</label>
-          <input v-model="form.roll_number" type="text" class="wf-input" placeholder="24f200..." required />
-        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="flex: 2; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Branch</label>
+            <select v-model="form.branch" class="wf-select">
+              <option value="CSE">Computer Science and Engineering</option>
+              <option value="ECE">Electronics and Communication Engineering</option>
+              <option value="ME">Mechanical Engineering</option>
+              <option value="CE">Civil Engineering</option>
+              <option value="EE">Electrical Engineering</option>
+            </select>
+          </div>
 
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Branch</label>
-          <select v-model="form.branch" class="wf-select">
-            <option value="CSE">Computer Science and Engineering</option>
-            <option value="ECE">Electronics and Communication Engineering</option>
-            <option value="ME">Mechanical Engineering</option>
-            <option value="CE">Civil Engineering</option>
-            <option value="EE">Electrical Engineering</option>
-          </select>
-        </div>
-
-        <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-          <div style="flex: 1;">
+          <div style="flex: 1; min-width: 100px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">Year</label>
             <input v-model="form.year" type="number" min="1" max="4" class="wf-input" required />
           </div>
-          <div style="flex: 1;">
+
+          <div style="flex: 1; min-width: 100px;">
             <label style="display: block; font-weight: bold; margin-bottom: 5px;">CGPA</label>
             <input v-model="form.cgpa" type="number" step="0.01" min="0" max="10" class="wf-input" required />
           </div>
@@ -66,24 +72,28 @@
 
       <!-- Company Fields -->
       <div v-if="role === 'company'">
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Company Name</label>
-          <input v-model="form.company_name" type="text" class="wf-input" placeholder="e.g. Google" required />
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Company Name</label>
+            <input v-model="form.company_name" type="text" class="wf-input" placeholder="e.g. Google" required />
+          </div>
+
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Industry</label>
+            <input v-model="form.industry" type="text" class="wf-input" placeholder="e.g. IT, Sales" required />
+          </div>
         </div>
 
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">HR Contact Name</label>
-          <input v-model="form.hr_contact_name" type="text" class="wf-input" placeholder="HR Name" required />
-        </div>
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">HR Contact Name</label>
+            <input v-model="form.hr_contact_name" type="text" class="wf-input" placeholder="HR Name" required />
+          </div>
 
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">HR Phone</label>
-          <input v-model="form.hr_phone" type="text" class="wf-input" placeholder="Phone Number" required />
-        </div>
-
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Industry</label>
-          <input v-model="form.industry" type="text" class="wf-input" placeholder="e.g. IT, Sales" required />
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">HR Phone</label>
+            <input v-model="form.hr_phone" type="text" class="wf-input" placeholder="Phone Number" required />
+          </div>
         </div>
       </div>
 
