@@ -95,6 +95,35 @@
             <input v-model="form.hr_phone" type="text" class="wf-input" placeholder="Phone Number" required />
           </div>
         </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Company Website</label>
+            <input v-model="form.website" type="url" class="wf-input" placeholder="e.g. https://google.com" />
+          </div>
+
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Headquarters</label>
+            <input v-model="form.headquarters" type="text" class="wf-input" placeholder="e.g. Mountain View, CA" />
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Founded Year</label>
+            <input v-model="form.founded_year" type="number" class="wf-input" placeholder="e.g. 1998" />
+          </div>
+
+          <div style="flex: 1; min-width: 200px;">
+            <label style="display: block; font-weight: bold; margin-bottom: 5px;">Number of Employees</label>
+            <input v-model="form.employee_count" type="text" class="wf-input" placeholder="e.g. 150000 or 100-500" />
+          </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 5px;">Company Description</label>
+          <textarea v-model="form.description" class="wf-input" rows="3" placeholder="Briefly describe the company organization..."></textarea>
+        </div>
       </div>
 
       <div style="text-align: center; margin-top: 20px;">
@@ -132,7 +161,12 @@ export default {
         company_name: '',
         hr_contact_name: '',
         hr_phone: '',
-        industry: ''
+        industry: '',
+        website: '',
+        description: '',
+        headquarters: '',
+        founded_year: '',
+        employee_count: ''
       }
     }
   },
