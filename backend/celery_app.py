@@ -1,3 +1,11 @@
+import os
+import sys
+
+# Ensure backend directory is in the Python path to resolve imports correctly
+backend_dir = os.path.dirname(os.path.abspath(__file__))
+if backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
 from celery import Celery
 
 def make_celery(app=None):
@@ -19,3 +27,5 @@ def make_celery(app=None):
         celery.Task = ContextTask
 
     return celery
+
+from tasks import celery

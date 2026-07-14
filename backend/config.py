@@ -17,3 +17,4 @@ class Config:
     MAIL_PASSWORD = 'rczp kleo opem euoe'
     MAIL_DEFAULT_SENDER = '24f2001460@ds.study.iitm.ac.in'
     GCHAT_WEBHOOK_URL = 'http://localhost:5000/api/gchat/mock_webhook'
+    MAIL_DEBUG = False

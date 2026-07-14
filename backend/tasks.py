@@ -1,6 +1,13 @@
-import csv
 import os
+import sys
+import csv
 from celery import Celery
+
+def ensure_path():
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+
 
 
 celery = Celery(
@@ -12,6 +19,7 @@ celery.conf.update(timezone='Asia/Kolkata', enable_utc=True)
 
 @celery.task(name='tasks.export_applications_csv')
 def export_applications_csv(student_id):
+    ensure_path()
     from run import app
     from models.models import Application, StudentProfile, Notification
     from database import db
@@ -64,6 +72,7 @@ def export_applications_csv(student_id):
 
 @celery.task(name='tasks.send_daily_reminders')
 def send_daily_reminders():
+    ensure_path()
     from run import app
     from extensions import mail
     from models.models import StudentProfile, PlacementDrive, Application
@@ -113,6 +122,7 @@ def send_daily_reminders():
 
 @celery.task(name='tasks.send_monthly_report')
 def send_monthly_report():
+    ensure_path()
     from run import app
     from extensions import mail
     from models.models import StudentProfile, PlacementDrive, Application, User
