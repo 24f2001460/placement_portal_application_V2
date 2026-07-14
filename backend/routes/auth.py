@@ -75,9 +75,8 @@ def register_company():
     email = data['email'].strip().lower()
     if User.query.filter_by(email=email).first():
         return jsonify({'error':'Email already registered'}),409
-    company_name = data['company_name'].strip().lower()
-    industry = data['industry'].strip().lower()
-    if CompanyProfile.query.filter_by(company_name=company_name).first() and CompanyProfile.query.filter_by(industry=industry).first():
+    company_name = data['company_name'].strip()
+    if CompanyProfile.query.filter(CompanyProfile.company_name.ilike(company_name)).first():
         return jsonify({'error':'This company already registered'}),409
 
     try:
@@ -96,6 +95,15 @@ def register_company():
         company.hr_contact_name = data.get('hr_contact_name', '')
         company.hr_phone = data.get('hr_phone', '')
         company.website = data.get('website', '')
+        company.industry = data.get('industry', '')
+        company.description = data.get('description', '')
+        company.headquarters = data.get('headquarters', '')
+        fy = data.get('founded_year')
+        try:
+            company.founded_year = int(fy) if fy else None
+        except (ValueError, TypeError):
+            company.founded_year = None
+        company.employee_count = data.get('employee_count', '')
         company.approval_status = 'pending'
         db.session.add(company)
 

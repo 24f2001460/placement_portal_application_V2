@@ -61,7 +61,13 @@ def dashboard():
         'branch': student.branch,
         'cgpa': student.cgpa,
         'is_placed': student.is_placed,
-        'total_applications': len(applications)
+        'total_applications': len(applications),
+        'phone': student.phone,
+        'skills': student.skills,
+        'linkedin_url': student.linkedin_url,
+        'github_url': student.github_url,
+        'bio': student.bio,
+        'resume_filename': student.resume_filename
     }), 200
 
 

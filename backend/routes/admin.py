@@ -227,9 +227,60 @@ def search():
         PlacementDrive.job_title.ilike(f'%{query}%')
     ).all()
     return jsonify({
-        'students': [{'id': s.id, 'full_name': s.full_name, 'roll_number': s.roll_number, 'branch': s.branch, 'cgpa': s.cgpa, 'status': s.status, 'is_placed': s.is_placed} for s in students],
-        'companies': [{'id': c.id, 'company_name': c.company_name, 'email': c.user.email, 'hr_contact': c.hr_contact_name, 'website': c.website, 'approval_status': c.approval_status} for c in companies],
-        'drives': [{'id': d.id, 'job_title': d.job_title, 'company': d.company.company_name, 'status': d.status, 'deadline': str(d.application_deadline)} for d in drives]
+        'students': [{
+            'id': s.id,
+            'full_name': s.full_name,
+            'email': s.user.email,
+            'roll_number': s.roll_number,
+            'branch': s.branch,
+            'year': s.year,
+            'cgpa': s.cgpa,
+            'phone': s.phone,
+            'date_of_birth': str(s.date_of_birth) if s.date_of_birth else None,
+            'graduation_year': s.graduation_year,
+            'backlogs': s.backlogs,
+            'resume_filename': s.resume_filename,
+            'skills': s.skills,
+            'linkedin_url': s.linkedin_url,
+            'github_url': s.github_url,
+            'bio': s.bio,
+            'status': s.status,
+            'is_placed': s.is_placed
+        } for s in students],
+        'companies': [{
+            'id': c.id,
+            'company_name': c.company_name,
+            'email': c.user.email,
+            'hr_contact': c.hr_contact_name,
+            'hr_phone': c.hr_phone,
+            'website': c.website,
+            'industry': c.industry,
+            'description': c.description,
+            'headquarters': c.headquarters,
+            'founded_year': c.founded_year,
+            'employee_count': c.employee_count,
+            'approval_status': c.approval_status,
+            'created_at': str(c.created_at)
+        } for c in companies],
+        'drives': [{
+            'id': d.id,
+            'job_title': d.job_title,
+            'job_description': d.job_description,
+            'job_type': d.job_type,
+            'company': d.company.company_name,
+            'location': d.location,
+            'salary_range': d.salary_range,
+            'openings': d.openings,
+            'eligible_branches': d.eligible_branches,
+            'min_cgpa': d.min_cgpa,
+            'eligible_years': d.eligible_years,
+            'max_backlogs': d.max_backlogs,
+            'required_skills': d.required_skills,
+            'status': d.status,
+            'rejection_reason': d.rejection_reason,
+            'deadline': str(d.application_deadline),
+            'created_at': str(d.created_at)
+        } for d in drives]
     }), 200
 
 
