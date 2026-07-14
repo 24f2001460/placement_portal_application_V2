@@ -1,0 +1,275 @@
+openapi: 3.0.3
+info:
+  title: Placement Portal API
+  description: REST API definition for the role-based placement portal application.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+paths:
+  /auth/register/student:
+    post:
+      summary: Register a new student profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - full_name
+                - roll_number
+                - branch
+                - year
+                - cgpa
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                full_name:
+                  type: string
+                roll_number:
+                  type: string
+                branch:
+                  type: string
+                year:
+                  type: integer
+                cgpa:
+                  type: number
+                  format: float
+      responses:
+        '201':
+          description: Student successfully registered
+        '400':
+          description: Invalid input data
+
+  /auth/register/company:
+    post:
+      summary: Register a new company profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - company_name
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                company_name:
+                  type: string
+                hr_contact_name:
+                  type: string
+                hr_phone:
+                  type: string
+                website:
+                  type: string
+                industry:
+                  type: string
+      responses:
+        '201':
+          description: Company registered, waiting for admin approval
+        '400':
+          description: Invalid input data
+
+  /auth/login:
+    post:
+      summary: Login to obtain JWT Access Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  role:
+                    type: string
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Account is inactive or pending approval
+
+  /admin/dashboard:
+    get:
+      summary: Get overview metrics for admin dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_students:
+                    type: integer
+                  total_companies:
+                    type: integer
+                  total_drives:
+                    type: integer
+
+  /admin/companies/{company_id}/approve:
+    put:
+      summary: Approve or reject a company profile
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: company_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Approval status updated successfully
+
+  /company/drives:
+    post:
+      summary: Propose a new placement drive
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - job_title
+                - job_description
+                - application_deadline
+              properties:
+                job_title:
+                  type: string
+                job_description:
+                  type: string
+                location:
+                  type: string
+                salary_range:
+                  type: string
+                min_cgpa:
+                  type: number
+                eligible_branches:
+                  type: string
+                max_backlogs:
+                  type: integer
+                application_deadline:
+                  type: string
+                  format: date-time
+      responses:
+        '201':
+          description: Drive proposed successfully, pending admin approval
+
+  /student/drives:
+    get:
+      summary: Get list of approved placement opportunities for students
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: eligible_only
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Returns list of drives with eligibility markers
+
+  /student/drives/{drive_id}/apply:
+    post:
+      summary: Submit job application for a drive
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: drive_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cover_letter:
+                  type: string
+      responses:
+        '201':
+          description: Successfully applied
+        '400':
+          description: Eligibility validation failed or deadline passed
+        '409':
+          description: Student already applied to this drive
+
+  /student/applications/export:
+    post:
+      summary: Trigger async background job to export student application history
+      security:
+        - bearerAuth: []
+      responses:
+        '202':
+          description: Export job initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  task_id:
+                    type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
